@@ -297,12 +297,10 @@ class Trainer(ABC):
 
     @property
     def run_name(self) -> str:
-        run_name = (
-            f"{self.cfg.exp}{self.task_run_name}"
-            f".b{self.global_train_batch_size}.gpus{overwatch.world_size()}"
-        )
-
-        run_name = f"{run_name}.{self.timestamp}"
+        # Save under the experiment name passed to the config (e.g. "apple_full_june_8")
+        # instead of the long auto-tagged
+        # "<exp>.<dataset>.<sched><steps>.<lr_sched>.lr<lr>.b<batch>.gpus<n>.<timestamp>".
+        run_name = self.cfg.exp
         if self.cfg.debug:
             run_name = f"debug-{run_name}"
         return run_name
