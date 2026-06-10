@@ -28,6 +28,18 @@ class LeRobotDatasetWrapper(torch.utils.data.Dataset):
         assert isinstance(data_cfg.transform.repack, LerobotRepackTransform)
         delta_timestamps = data_cfg.transform.repack.delta_timestamps(dataset_meta.fps)
 
+        # Optionally restrict training to the first `train_fraction` of episodes.
+        episodes = None
+        fraction = getattr(data_cfg, "train_fraction", None)
+        if split == "train" and fraction is not None and fraction < 1.0:
+            if len(repo_ids) > 1:
+                raise NotImplementedError(
+                    "train_fraction is only supported for a single train_repo_id"
+                )
+            num_episodes = dataset_meta.total_episodes
+            keep = max(1, int(num_episodes * fraction))
+            episodes = list(range(keep))
+
         if len(repo_ids) > 1:
             root_dir = data_cfg.root_dir
             lerobot_dataset_class = MultiLeRobotDataset
@@ -39,6 +51,7 @@ class LeRobotDatasetWrapper(torch.utils.data.Dataset):
         self.base_dataset = lerobot_dataset_class(
             repo_ids,# type: ignore
             root=root_dir,
+            episodes=episodes,
             delta_timestamps=delta_timestamps, # type: ignore
             image_transforms=None,
         )
