@@ -11,6 +11,15 @@ class LerobotDataConfig(DataConfig):
     root_dir: str
     train_repo_ids: List[str] = Field(default_factory=list)
     val_repo_ids: List[str] = Field(default_factory=list)
+    # If set (e.g. 0.8), training uses only the first `train_fraction` of episodes
+    # (whole episodes, ordered by index). None means use all episodes.
+    train_fraction: Optional[float] = None
+
+    @model_validator(mode="after")
+    def check_train_fraction(self):
+        if self.train_fraction is not None and not (0.0 < self.train_fraction <= 1.0):
+            raise ValueError("train_fraction must be in (0, 1]")
+        return self
 
     @model_validator(mode="after")
     def check_repo_ids(self):
